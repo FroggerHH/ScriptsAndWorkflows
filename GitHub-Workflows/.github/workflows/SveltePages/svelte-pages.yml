@@ -1,0 +1,49 @@
+name: Build And Deploy Svelte
+on: [push]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Check node and npm
+        run: .github/workflows/SveltePages/check_node.ps1
+        shell: pwsh
+
+      - name: Install python dependencies
+        run: python -m pip install --upgrade pip
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build app
+        run: |
+          mkdir test && cd test
+          npm run build
+
+      # - name: Run main script
+      #   run: python .github/workflows/SveltePages/main.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Built svelte pages" || true  # Ignore if there are no changes to commit
+          git push
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.COMMITS_TOKEN }}
